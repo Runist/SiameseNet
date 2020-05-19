@@ -107,15 +107,15 @@ def test_nn_and_siamese(weight_path, curves_path):
     valid_accs, train_accs, nn_accs = [], [], []
     test_num = 2
 
-    another_strategy = tf.distribute.MirroredStrategy()
-    with another_strategy.scope():
-        model = siamese_network()
-        model.load_weights(weight_path)
+    # another_strategy = tf.distribute.MirroredStrategy()
+    # with another_strategy.scope():
+    model = siamese_network()
+    model.load_weights(weight_path)
 
-        for N in ways:
-            train_accs.append(loader.test_oneshot(model, N, test_num, "train"))
-            valid_accs.append(loader.test_oneshot(model, N, test_num, "valid"))
-            nn_accs.append(test_nn_accuracy(N, test_num, loader))
+    for N in ways:
+        train_accs.append(loader.test_oneshot(model, N, test_num, "train"))
+        valid_accs.append(loader.test_oneshot(model, N, test_num, "valid"))
+        nn_accs.append(test_nn_accuracy(N, test_num, loader))
 
     # 把数据保存下来，服务器上不好显示，在本机显示图像
     with open(curves_path, 'w') as f:
@@ -172,8 +172,8 @@ if __name__ == '__main__':
 
     # plot_images(os.path.join(cfg.data_path, 'images_background/Arcadian/character03/'))
 
-    test_curvesh = cfg.summary_path + "test_curves.txt"
-    test_nn_and_siamese(cfg.model_path, test_curvesh)
+    test_curves = cfg.summary_path + "test_curves.txt"
+    test_nn_and_siamese(cfg.model_path, test_curves)
 
     # train_curves = cfg.summary_path + "test_curves.txt"
     # plot_curves(train_curves)
