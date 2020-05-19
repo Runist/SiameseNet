@@ -13,11 +13,11 @@ import os
 import matplotlib.pyplot as plt
 
 
-data_path = os.path.join('dataset/')
+data_path = './dataset/'
 train_folder = os.path.join(data_path, 'images_background')
 valpath = os.path.join(data_path, 'images_evaluation')
 
-save_path = 'dataset/'
+save_path = './dataset/'
 
 
 def loadimgs(path, n=0):
