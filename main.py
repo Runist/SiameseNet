@@ -17,6 +17,7 @@ import numpy as np
 import os
 import time
 from dataReader import SiameseLoader
+import config as cfg
 
 
 def siamese_network(input_shape=(105, 105, 1), lr=0.00006):
@@ -33,21 +34,22 @@ def siamese_network(input_shape=(105, 105, 1), lr=0.00006):
     w_init = initializers.RandomNormal(mean=0.0, stddev=0.01, seed=None)
     b_init = initializers.RandomNormal(mean=0.5, stddev=0.01, seed=None)
 
-    model = Sequential()
-    model.add(Conv2D(64, (10, 10), activation='relu', input_shape=input_shape,   # shape(n, 64, 94, 94)
-                     kernel_initializer=w_init, kernel_regularizer=l2(2e-4)))
-    model.add(MaxPooling2D())
-    model.add(Conv2D(128, (7, 7), activation='relu',  # shape(n, 128, 88, 88)
-                     kernel_initializer=w_init, kernel_regularizer=l2(2e-4), bias_initializer=b_init))
-    model.add(MaxPooling2D())
-    model.add(Conv2D(128, (4, 4), activation='relu',  # shape(n, 128, 85, 85)
-                     kernel_initializer=w_init, kernel_regularizer=l2(2e-4), bias_initializer=b_init))
-    model.add(MaxPooling2D())
-    model.add(Conv2D(256, (4, 4), activation='relu',  # shape(n, 256, 82, 82)
-                     kernel_initializer=w_init, kernel_regularizer=l2(2e-4), bias_initializer=b_init))
-    model.add(Flatten())  # shape(n, 1721344)
-    model.add(Dense(4096, activation="sigmoid",
-              kernel_initializer=w_init, kernel_regularizer=l2(1e-3), bias_initializer=b_init))
+    model = Sequential([
+        Conv2D(64, (10, 10), activation='relu', input_shape=input_shape,  # shape(n, 64, 94, 94)
+               kernel_initializer=w_init, kernel_regularizer=l2(2e-4)),
+        MaxPooling2D(),
+        Conv2D(128, (7, 7), activation='relu',  # shape(n, 128, 88, 88)
+               kernel_initializer=w_init, kernel_regularizer=l2(2e-4), bias_initializer=b_init),
+        MaxPooling2D(),
+        Conv2D(128, (4, 4), activation='relu',  # shape(n, 128, 85, 85)
+               kernel_initializer=w_init, kernel_regularizer=l2(2e-4), bias_initializer=b_init),
+        MaxPooling2D(),
+        Conv2D(256, (4, 4), activation='relu',  # shape(n, 256, 82, 82)
+               kernel_initializer=w_init, kernel_regularizer=l2(2e-4), bias_initializer=b_init),
+        Flatten(),
+        Dense(4096, activation="sigmoid",
+              kernel_initializer=w_init, kernel_regularizer=l2(1e-3), bias_initializer=b_init)
+    ])
 
     # 输出两个编码向量
     encoded_l = model(left_input)
@@ -82,7 +84,7 @@ def train_on_low_level(model, loader, batch_size, weights_path, summary_path, n_
     best_acc = 0
     evaluate_every = 10
     loss_every = 20
-    n_iter = 20
+    n_iter = 40
     train_loss = []
     valid_accs = []
 
@@ -100,24 +102,24 @@ def train_on_low_level(model, loader, batch_size, weights_path, summary_path, n_
             valid_accs.append(valid_acc)
 
             if valid_acc >= best_acc:
-                weights_path = "{}one_shot_learning.h5".format(weights_path)
-
-                print("Current best: {0}, previous best: {1}".format(valid_acc, best_acc))
-                print("Saving weights to: {0} \n".format(weights_path))
+                print("Current best: {}, previous best: {}".format(valid_acc, best_acc))
+                print("Saving weights to: {} \n".format(weights_path))
                 model.save_weights(weights_path)
                 best_acc = valid_acc
 
         if i % loss_every == 0:
             print("iteration {}, training loss: {:.2f},".format(i, loss))
 
-    curves_path = "{}curves.txt".format(summary_path)
+    # 把数据保存下来，服务器上不好显示，在本机显示图像
+    curves_path = summary_path + "train_curves.txt"
     with open(curves_path, 'w') as f:
+        f.write("[train_loss]\n")
         for loss in train_loss:
-            f.write("{:.4f}\n".format(loss))
+            f.write("{:.4f},".format(loss))
 
-        f.write("\n")
+        f.write("\n[valid_accs]\n")
         for acc in valid_accs:
-            f.write("{:.2f}\n".format(acc))
+            f.write("{:.2f},".format(acc))
 
 
 def train_by_generator(model, loader, batch_size, epochs, weight_path):
@@ -141,28 +143,19 @@ def train_by_generator(model, loader, batch_size, epochs, weight_path):
 
 
 def main():
-    INPUT_SHAPE = (105, 105, 1)
-    LEARNING_RATE = 0.00006
-    BATCH_SIZE = 32
-    EPOCHS = 50
-    data_path = './dataset'
-    model_path = "./logs/model/"
-    summary_path = "./logs/summary/"
-    train_mode = "on_batch"
+    if not os.path.exists(cfg.model_path):
+        os.makedirs(cfg.model_path)
 
-    if not os.path.exists(model_path):
-        os.makedirs(model_path)
+    if not os.path.exists(cfg.summary_path):
+        os.makedirs(cfg.summary_path)
 
-    if not os.path.exists(summary_path):
-        os.makedirs(summary_path)
+    model = siamese_network(cfg.input_shape, cfg.learning_rate)
+    loader = SiameseLoader(cfg.data_path)
 
-    model = siamese_network(INPUT_SHAPE, LEARNING_RATE)
-    loader = SiameseLoader(data_path)
-
-    if train_mode == "generator":
-        train_by_generator(model, loader, BATCH_SIZE, EPOCHS, model_path)
+    if cfg.train_mode == "generator":
+        train_by_generator(model, loader, cfg.batch_size, cfg.epochs, cfg.model_path)
     else:
-        train_on_low_level(model, loader, BATCH_SIZE, model_path, summary_path, 20, 10)
+        train_on_low_level(model, loader, cfg.batch_size, cfg.model_path, cfg.summary_path, 20, 10)
 
 
 if __name__ == '__main__':

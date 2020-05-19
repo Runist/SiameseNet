@@ -14,51 +14,6 @@ import numpy as np
 # from load_data import *
 
 
-def gen_class_names(base_class_name):
-    """
-    生成分类名字的列表
-    :param base_class_name: 分类名的前缀
-    :return:
-    """
-    classes = []
-    for i in range(1, 21):
-        if i < 10:
-            classes.append("{0}0{1}".format(base_class_name, i))
-        else:
-            classes.append("{0}{1}".format(base_class_name, i))
-    return classes
-
-
-def generate_one_hot_encoding(classes):
-    """
-    利用sklearn中的preprocessing包快速生成onehot编码
-    :param classes: 分类的名字
-    :return: 生成的onehot编码列表
-    """
-    encoder = LabelBinarizer()
-    transfomed_labels = encoder.fit_transform(classes)
-
-    return transfomed_labels
-
-
-def plot_images(path):
-    """
-        Plot all 20 samples of a particular character of a language
-    """
-    f, axarr = plt.subplots(5, 4, figsize=(10, 10))
-    images_list = []
-    for image in os.listdir(path):
-        image_path = os.path.join(path, image)
-        img = cv.imread(image_path)
-        images_list.append(img)
-
-    for i in range(5):
-        for j in range(4):
-            axarr[i, j].imshow(images_list.pop())
-
-    plt.show()
-
-
 class SiameseLoader:
     """For loading batches and testing tasks to a siamese net"""
 
@@ -207,15 +162,4 @@ class SiameseLoader:
         return percent_correct
 
 
-if __name__ == '__main__':
-    data_path = './dataset'
-    base_class_name = 'character'
-
-    classes = gen_class_names(base_class_name)
-    # labels = generate_one_hot_encoding(classes)
-
-    # plot_images(os.path.join(data_path, 'images_background/Arcadian/character03/'))
-    loader = SiameseLoader(data_path)
-    loader.get_batch(32)
-    loader.make_oneshot_task(5)
 
