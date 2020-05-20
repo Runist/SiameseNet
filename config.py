@@ -13,3 +13,4 @@ data_path = './dataset'
 model_path = "./logs/model/one_shot_learning.h5"
 summary_path = "./logs/summary/"
 train_mode = "on_batch"
+similar_threshold = 0.8

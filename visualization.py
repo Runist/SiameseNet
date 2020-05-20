@@ -161,7 +161,7 @@ def plot_curves(file):
         history[name[i]] = list(map(float, data[i].split(",")))
 
     for key, values in history.items():
-        plt.plot(range(len(values)), values, color=randomcolor())
+        plt.plot(range(0, len(values)), values, color=randomcolor())
 
     plt.legend(history.keys(), loc=0)
     plt.show()
@@ -173,7 +173,8 @@ if __name__ == '__main__':
     # plot_images(os.path.join(cfg.data_path, 'images_background/Arcadian/character03/'))
 
     test_curves = cfg.summary_path + "test_curves.txt"
-    test_nn_and_siamese(cfg.model_path, test_curves)
+    train_curves = cfg.summary_path + "train_curves.txt"
+    # test_nn_and_siamese(cfg.model_path, test_curves)
 
-    # train_curves = cfg.summary_path + "test_curves.txt"
+    plot_curves(test_curves)
     # plot_curves(train_curves)

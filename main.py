@@ -143,11 +143,13 @@ def train_by_generator(model, loader, batch_size, epochs, weight_path):
 
 
 def main():
-    if not os.path.exists(cfg.model_path):
-        os.makedirs(cfg.model_path)
+    root_path = os.path.split(cfg.model_path)[0]
+    if not os.path.exists(root_path):
+        os.makedirs(root_path)
 
-    if not os.path.exists(cfg.summary_path):
-        os.makedirs(cfg.summary_path)
+    root_path = os.path.split(cfg.summary_path)[0]
+    if not os.path.exists(root_path):
+        os.makedirs(root_path)
 
     model = siamese_network(cfg.input_shape, cfg.learning_rate)
     loader = SiameseLoader(cfg.data_path)
