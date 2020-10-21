@@ -24,7 +24,6 @@ def main():
 
     model = siamese_network()
     model.load_weights(cfg.model_path)
-
     left_img = tf.expand_dims(left_img, axis=0)
     left_img = tf.expand_dims(left_img, axis=-1)
     right_img = tf.expand_dims(right_img, axis=0)
@@ -40,6 +39,7 @@ def main():
     else:
         cv.putText(image, "False", (8, 18), font, 0.7, (0, 0, 0), 1)
 
+    print("similarity: {:.2f}%".format(result[0][0] * 100))
     cv.imshow("result", image)
     cv.waitKey(0)
 
